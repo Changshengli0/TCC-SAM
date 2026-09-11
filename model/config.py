@@ -1,0 +1,488 @@
+from detectron2.config import CfgNode as CN
+
+def add_open_world_sam2_config(cfg):
+    """
+    Add config for OpenWorldSAM.
+    """
+    # data config
+    # select the dataset mapper
+    cfg.INPUT.DATASET_MAPPER_NAME = "open_world_instance"
+    # Color augmentation
+    cfg.INPUT.COLOR_AUG_SSD = False
+    # We retry random cropping until no single category in semantic segmentation GT occupies more
+    # than `SINGLE_CATEGORY_MAX_AREA` part of the crop.
+    cfg.INPUT.CROP.SINGLE_CATEGORY_MAX_AREA = 1.0
+    # Pad image and segmentation GT in dataset mapper.
+    cfg.INPUT.SIZE_DIVISIBILITY = -1
+
+    # solver config
+    # weight decay on embedding
+    cfg.SOLVER.WEIGHT_DECAY_EMBED = 0.0
+    # optimizer
+    cfg.SOLVER.OPTIMIZER = "ADAMW"
+    cfg.SOLVER.BACKBONE_MULTIPLIER = 0.1
+    cfg.SOLVER.SLOT_LR = 1e-4
+    cfg.SOLVER.SLOT_ONLY_WARMUP_ITERS = 0
+    cfg.SOLVER.SLOT_MECH_GRAD_DEBUG = False
+
+    # OWSAM model config
+    cfg.MODEL.OpenWorldSAM2 = CN()
+
+    # EVF-SAM model config
+    cfg.MODEL.OpenWorldSAM2.EVF_CONFIG = "YxZhang/evf-sam2-multitask"
+    cfg.MODEL.OpenWorldSAM2.TOKENIZER_CONFIG = "YxZhang/evf-sam2-multitask"
+    cfg.MODEL.OpenWorldSAM2.TORCH_DTYPE = "fp32" # choices=["fp32", "bf16", "fp16"]
+    cfg.MODEL.OpenWorldSAM2.TRAIN_MASK_DECODER = False
+    cfg.MODEL.OpenWorldSAM2.TRAIN_PROMPT_ENCODER = False
+    cfg.MODEL.OpenWorldSAM2.TRAIN_VLM = False
+    cfg.MODEL.OpenWorldSAM2.LORA_ON = True
+    cfg.MODEL.OpenWorldSAM2.BEIT3_TRAIN_LAST_N_LAYERS = 0
+    cfg.MODEL.OpenWorldSAM2.BEIT3_FREEZE_LORA_WHEN_FULL_UNFREEZE = False
+    # Global compatibility switch: when enabled, prefer the closest available
+    # path to the original OpenWorldSAM behavior and bypass BridgeSAM additions.
+    cfg.MODEL.OpenWorldSAM2.OPENWORLDSAM_COMPAT = False
+    cfg.MODEL.OpenWorldSAM2.GRAD_CKPT = True
+    cfg.MODEL.OpenWorldSAM2.USE_CACHE = False
+    # used for ImageList padding / size_divisibility, keep default 1024
+    cfg.MODEL.OpenWorldSAM2.PAD_SIZE = 1024
+    cfg.MODEL.OpenWorldSAM2.SAM2_YAML = "sam2_hiera_l.yaml"
+    cfg.MODEL.OpenWorldSAM2.SAM2_IMAGE_SIZE = 1024
+    cfg.MODEL.OpenWorldSAM2.QUERY_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.VISION_PRETRAINED = "checkpoints/sam_vit_h_4b8939.pth"
+
+    # OPENWORLDSAM2 config
+    cfg.MODEL.OpenWorldSAM2.NUM_OBJECT_QUERIES = 20
+    cfg.MODEL.OpenWorldSAM2.TRAIN_TIE_BREAKER = True
+    cfg.MODEL.OpenWorldSAM2.USE_VISUAL_TOKENS = True
+    cfg.MODEL.OpenWorldSAM2.USE_CROSS_ATTENTION = True
+    cfg.MODEL.OpenWorldSAM2.CROSS_ATTENTION_LAYERS = 3
+    cfg.MODEL.OpenWorldSAM2.ORACLE_BESTK_ON = False
+    cfg.MODEL.OpenWorldSAM2.ORACLE_BESTK_USE_DICE = True
+    cfg.MODEL.OpenWorldSAM2.ORACLE_BESTK_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_LOSS_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_LOSS_WEIGHT = 0.05
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_LOSS_MARGIN = 0.05
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_HARD_GAP_THR = 0.03
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_TARGET = "iou_pred"
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_LOSS_TYPE = "margin"
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_SOFT_TAU = 0.03
+    cfg.MODEL.OpenWorldSAM2.CAND_RANK_SCORE_TAU = 0.10
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_TRAIN_ONLY = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_WEIGHT = 0.01
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_DELTA_SCALE = 0.10
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_SOFT_TAU = 0.05
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_SCORE_TAU = 0.10
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HIDDEN_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_CONSERVATIVE_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_TOPGAP_THR = 0.05
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_EVIDENCE_DROP_THR = 0.03
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_MIN_DELTA_GAP = 0.00
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_AREA_AWARE_LOSS = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_AREA_WEIGHT_POWER = 0.5
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_AREA_REF = 50000.0
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_AREA_MIN_WEIGHT = 1.0
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_MAX_AREA_WEIGHT = 3.0
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HARD_FOCUS_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HARD_GAP_THR = 0.03
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_EASY_DELTA_REG_W = 0.001
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HARD_MIN_TOPGAP = -1.0
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HARD_MAX_TOPGAP = 0.20
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_HARD_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_GAP_WEIGHTED_ON = False
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_GAP_WEIGHT_NORM = 0.03
+    cfg.MODEL.OpenWorldSAM2.CAND_SCORE_HEAD_GAP_WEIGHT_MIN = 0.10
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_ON = False
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_HIDDEN_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_LOSS_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_INFER_ON = False
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_SCORE_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_USE_RING = True
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_RING_DILATE = 3
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.VERIFIER_EXPORT_PATH = "outputs/verifier_probe.jsonl"
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_DIVERSITY_ON = False
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_DIVERSITY_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_DIVERSITY_USE_LOGITS = False
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_DIVERSITY_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CONTRAST_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CONTRAST_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CONTRAST_MARGIN = 0.1
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CONTRAST_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_ANALYSIS_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.CANDIDATE_ANALYSIS_EXPORT_PATH = "outputs/candidate_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.EVAL_EXPORT_PER_SAMPLE_ON = False
+    cfg.MODEL.OpenWorldSAM2.EVAL_EXPORT_PER_SAMPLE_PATH = "outputs/per_sample_results.jsonl"
+    cfg.MODEL.OpenWorldSAM2.VIS_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.VIS_EXPORT_DIR = "outputs/vis_export"
+    cfg.MODEL.OpenWorldSAM2.VIS_EXPORT_MAX_SAMPLES = 30
+    cfg.MODEL.OpenWorldSAM2.VIS_EXPORT_EVERY = 1
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_TOPK = 5
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_MIN_SCORE = 0.15
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_NMS_RADIUS = 12
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_EXPORT_PATH = "outputs/instance_candidate_expand_debug.jsonl"
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_GENERATE_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_MAX_EXTRA = 8
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_DEDUP_IOU_THR = 0.90
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_USE_NEG_POINTS = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_KEEP_NATIVE_FIRST = True
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_POINT_BATCH_SIZE = 4
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_EMPTY_CACHE_ON_OOM = True
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_SCORE_BONUS_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_SCORE_BONUS = 0.0
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_SCORE_BONUS_MODE = "calib"
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_ORACLE_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_ORACLE_EXPORT_PATH = "outputs/instance_candidate_expand_oracle.jsonl"
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_DRY_RUN = True
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_SCORE_MARGIN = 0.03
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_EVIDENCE_MARGIN = 0.02
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_PEAK_MIN = 0.20
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_BASE_GAP_THR = 0.15
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_MIN_AREA_RATIO = 0.05
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_MAX_AREA_RATIO = 4.0
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_SAFE_OR_ON = False
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_STRICT_AREA_RATIO = 0.85
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_RELAXED_AREA_RATIO = 0.70
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_RELAXED_EVIDENCE_MARGIN = 0.025
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_RELAXED_SCORE_MARGIN = -0.012
+    cfg.MODEL.OpenWorldSAM2.INSTANCE_CAND_EXPAND_RESCUE_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.RERANK_CASE_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.RERANK_CASE_EXPORT_DIR = "outputs/rerank_cases"
+    cfg.MODEL.OpenWorldSAM2.RERANK_CASE_EXPORT_MAX_SAMPLES = 20
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_ON = False
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_USE_CAT = True
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_USE_ATTR = True
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_USE_REL = False
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_SCORE_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_EXPORT_PATH = "outputs/phrase_verifier_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_LOSS_ON = False
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_LOSS_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_MARGIN = 0.05
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_POS_MODE = "oracle_best"
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_NEG_MODE = "hardest"
+    cfg.MODEL.OpenWorldSAM2.PHRASE_VERIFIER_MIN_IOU_GAP = 0.02
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_ON = False
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_NUM_TOKENS = 4
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_INJECT_BETA = 1.0
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_USE_RESIDUAL = True
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_EXPORT_PATH = "outputs/disamb_route_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_FREEZE_BACKBONE = True
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_FREEZE_DECODER = True
+    cfg.MODEL.OpenWorldSAM2.DISAMB_ROUTE_FREEZE_TEXT_PATH = True
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_ON = False
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_TARGET = "pre_decoder"
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_MODE = "film"
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_USE_RESIDUAL = True
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_SCALE_INIT = 0.0
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_EXPORT_PATH = "outputs/deep_fusion_adapter_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_FREEZE_BACKBONE = True
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_FREEZE_DECODER = True
+    cfg.MODEL.OpenWorldSAM2.DEEP_FUSION_ADAPTER_FREEZE_TEXT_PATH = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_ON = False
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_MODE = "film"
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_USE_RESIDUAL = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_SCALE_INIT = 0.01
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_USE_IMAGE_EMBED = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_USE_HIGH_RES = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_EXPORT_PATH = "outputs/multiscale_deep_fusion_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_FREEZE_BACKBONE = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_FREEZE_DECODER = True
+    cfg.MODEL.OpenWorldSAM2.MULTISCALE_DEEP_FUSION_FREEZE_TEXT_PATH = True
+    cfg.MODEL.OpenWorldSAM2.AML_ON = False
+    cfg.MODEL.OpenWorldSAM2.AML_USE_SOFT_WEIGHT = True
+    cfg.MODEL.OpenWorldSAM2.AML_POS_ONLY = True
+    cfg.MODEL.OpenWorldSAM2.AML_POS_QUANTILE = 0.3
+    cfg.MODEL.OpenWorldSAM2.AML_WEIGHT_FLOOR = 0.2
+    cfg.MODEL.OpenWorldSAM2.AML_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.AML_EXPORT_PATH = "outputs/aml_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.DPG_ON = False
+    cfg.MODEL.OpenWorldSAM2.DPG_MODE = "mask_prompt"
+    cfg.MODEL.OpenWorldSAM2.DPG_SIGMOID = True
+    cfg.MODEL.OpenWorldSAM2.DPG_DETACH_VISUAL = False
+    cfg.MODEL.OpenWorldSAM2.DPG_USE_FUSED_TEXT = True
+    cfg.MODEL.OpenWorldSAM2.DPG_LOSS_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.DPG_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_ON = False
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_NUM_GROUPS = 3
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_GROUP_SIZE = 6
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_MODE = "cat_attr_generic"
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_INJECT_BETA = 1.0
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.GROUPED_QUERY_EXPORT_PATH = "outputs/grouped_query_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.PDQG_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_NUM_GROUPS = 3
+    cfg.MODEL.OpenWorldSAM2.PDQG_CAT_GROUP_SIZE = 2
+    cfg.MODEL.OpenWorldSAM2.PDQG_ATTR_GROUP_SIZE = 2
+    cfg.MODEL.OpenWorldSAM2.PDQG_DISAMB_GROUP_SIZE = 2
+    cfg.MODEL.OpenWorldSAM2.PDQG_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.PDQG_USE_RESIDUAL = True
+    cfg.MODEL.OpenWorldSAM2.PDQG_SCALE_INIT = 0.0
+    cfg.MODEL.OpenWorldSAM2.PDQG_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_FREEZE_BACKBONE = True
+    cfg.MODEL.OpenWorldSAM2.PDQG_FREEZE_DECODER = True
+    cfg.MODEL.OpenWorldSAM2.PDQG_FREEZE_TEXT_PATH = True
+    cfg.MODEL.OpenWorldSAM2.PDQG_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_EXPORT_PATH = "outputs/pdqg_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.PDQG_MODE = "cat_attr_disamb"
+    cfg.MODEL.OpenWorldSAM2.PDQG_V2_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_RANKING_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_LOSS_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_MARGIN = 0.1
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_POS_IOU_THR = 0.5
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_NEG_IOU_MAX = 0.5
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_GAP_THR = 0.15
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_TOPK = 3
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.PDQG_AMBIG_EXPORT_PATH = "outputs/pdqg_v2_ambiguity_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.EFTPG_ON = False
+    cfg.MODEL.OpenWorldSAM2.EFTPG_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.EFTPG_USE_RESIDUAL = True
+    cfg.MODEL.OpenWorldSAM2.EFTPG_SCALE_INIT = 0.0
+    cfg.MODEL.OpenWorldSAM2.EFTPG_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.EFTPG_FREEZE_BACKBONE = True
+    cfg.MODEL.OpenWorldSAM2.EFTPG_FREEZE_DECODER = True
+    cfg.MODEL.OpenWorldSAM2.EFTPG_FREEZE_TEXT_PATH = True
+    cfg.MODEL.OpenWorldSAM2.EFTPG_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.EFTPG_EXPORT_PATH = "outputs/eftpg_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.EFTPG_MODE = "cat_attr_disamb"
+    cfg.MODEL.OpenWorldSAM2.LOSS = CN()
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_ALIGN_ON = False
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_ALIGN_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_ALIGN_MARGIN = 0.1
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_ALIGN_USE_CAT = False
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_ALIGN_USE_ATTR = False
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_DIVERSITY_ON = False
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_DIVERSITY_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.LOSS.CAND_DIVERSITY_IOU_THR = 0.6
+    cfg.MODEL.OpenWorldSAM2.LOSS.SAME_IMAGE_HARDNEG_ON = False
+    cfg.MODEL.OpenWorldSAM2.LOSS.SAME_IMAGE_HARDNEG_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.LOSS.SAME_IMAGE_HARDNEG_MARGIN = 0.1
+    cfg.MODEL.OpenWorldSAM2.LOSS.SAME_IMAGE_HARDNEG_GAP_THR = 0.05
+
+    cfg.MODEL.OpenWorldSAM2.FUSION = CN()
+    cfg.MODEL.OpenWorldSAM2.FUSION.ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_ONLY_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_TOKENS = 6
+    cfg.MODEL.OpenWorldSAM2.FUSION.GAMMA_CLS = 0.2
+    cfg.MODEL.OpenWorldSAM2.FUSION.GATE_TYPE = "residual"
+    cfg.MODEL.OpenWorldSAM2.FUSION.WORDTYPE_HEAD = "mlp"
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_ON = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_NUM = 4
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_DIM = 0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_SINGLE_PASS = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_USE_ITERATIVE = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_TEMPERATURE = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_LOAD_BALANCE_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_DIVERSITY_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_COMPETITION_W = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_UNION_AUX_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_UNION_AUX_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_UNION_EVIDENCE_SUP_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_UNION_EVIDENCE_SUP_WEIGHT = 0.05
+    cfg.MODEL.OpenWorldSAM2.FUSION.RESIDUAL_BETA_OVERRIDE = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MAPS_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MAPS_MAX_SAMPLES = 10
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MAPS_DIR = ""
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MECH_DIAG_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MECH_DIAG_MAX_SAMPLES = 10
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXPORT_SLOT_MECH_DIAG_DIR = ""
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SLOT_GATE_TYPE = ""
+    cfg.MODEL.OpenWorldSAM2.FUSION.GATE_TAU = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.GATE_CLAMP = (0.0, 1.0)
+    cfg.MODEL.OpenWorldSAM2.FUSION.GATE_INIT_BIAS = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.USE_REL = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.REL_LAMBDA = 0.5
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_SPLIT = "2,2,2"
+    cfg.MODEL.OpenWorldSAM2.FUSION.DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_RERANK = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_ALPHA = 0.3
+    cfg.MODEL.OpenWorldSAM2.FUSION.ADAPTIVE_ALPHA_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ADAPTIVE_ALPHA_SHORT_SCALE = 0.5
+    cfg.MODEL.OpenWorldSAM2.FUSION.ADAPTIVE_ALPHA_MID_SCALE = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.ADAPTIVE_ALPHA_LONG_SCALE = 1.2
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_HIGH_THR = 0.08
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_LOW_THR = 0.03
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_HIGH_SCALE = 0.7
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_MID_SCALE = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_GAP_LOW_SCALE = 1.15
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_CUE_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_CUE_SCALE = 1.10
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_CUE_WORDS = [
+        "left", "right", "middle", "behind", "front",
+        "next to", "between", "near", "beside", "around",
+        "first", "second", "third", "fourth",
+        "with", "wearing", "holding", "standing", "sitting",
+        "on top of", "under", "above", "below"
+    ]
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_MIN_SCALE = 0.3
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_MAX_SCALE = 1.5
+    cfg.MODEL.OpenWorldSAM2.FUSION.RISK_ALPHA_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ENTROPY_ADAPTIVE_ALPHA_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ENTROPY_ADAPTIVE_ALPHA_LOW_SCALE = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.ENTROPY_ADAPTIVE_ALPHA_HIGH_SCALE = 0.3
+    cfg.MODEL.OpenWorldSAM2.FUSION.ENTROPY_ADAPTIVE_ALPHA_THRESHOLD = 0.7
+    cfg.MODEL.OpenWorldSAM2.FUSION.SIZE_CONSISTENCY_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SIZE_CONSISTENCY_GAMMA = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.SIZE_CONSISTENCY_ALLOWANCE = 1.5
+    cfg.MODEL.OpenWorldSAM2.FUSION.UNION_RERANK_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.UNION_RERANK_BETA = 0.1
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_FALLBACK_THR = 5e-4
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVAL_CANDIDATE_K = 0
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXTERNAL_PROPOSAL_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXTERNAL_PROPOSAL_MAX_STAGES = 2
+    cfg.MODEL.OpenWorldSAM2.FUSION.MULTI_PROMPT_UNION_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.MULTI_PROMPT_UNION_DEDUP_IOU_THR = 0.95
+    cfg.MODEL.OpenWorldSAM2.FUSION.MP_UNION_GATE_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DECODER_NATIVE_EXPAND_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.REAL_CANDIDATE_EXPAND_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.REAL_CANDIDATE_EXPAND_MAX_PASSES = 2
+    cfg.MODEL.OpenWorldSAM2.FUSION.REAL_CANDIDATE_EXPAND_STD = 0.02
+    cfg.MODEL.OpenWorldSAM2.FUSION.REAL_CANDIDATE_EXPAND_DEDUP_IOU_THR = 0.98
+    cfg.MODEL.OpenWorldSAM2.FUSION.REAL_CANDIDATE_EXPAND_DIVERSITY_LAMBDA = 0.25
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_USE_SLOTS = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_USE_CAT = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_USE_ATTR = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_USE_REL = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.USE_DISAMB = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_LAMBDA = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.EVIDENCE_USE_DISAMB = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_EXPORT_PATH = "outputs/disamb_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_AUX_LOSS_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_AUX_LOSS_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_DECORR_LOSS_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_DECORR_LOSS_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.DISAMB_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_HIDDEN = 32
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_LOSS_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_INFER_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.LEARNABLE_FALLBACK_GATE_EXPORT_PATH = "outputs/fallback_gate_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_MAP_SUP_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_MAP_CAT_LOSS_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_MAP_ATTR_LOSS_WEIGHT = 0.05
+    cfg.MODEL.OpenWorldSAM2.FUSION.ROUTE_MAP_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.AUX_MAP_SUP_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.AUX_MAP_CAT_LOSS_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.FUSION.AUX_MAP_ATTR_LOSS_WEIGHT = 0.05
+    cfg.MODEL.OpenWorldSAM2.FUSION.AUX_MAP_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_SUPERVISION_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_SUPERVISION_W = 1.0
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_SUPERVISION_MODE = "region_rank"
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_POS_DILATE = 3
+
+    cfg.MODEL.OpenWorldSAM2.DIAG = CN()
+    cfg.MODEL.OpenWorldSAM2.DIAG.ENABLED = False
+    cfg.MODEL.OpenWorldSAM2.DIAG.TRAIN_LOG_PERIOD = 200
+    cfg.MODEL.OpenWorldSAM2.DIAG.EVAL_SAMPLE_LIMIT = 8
+    cfg.MODEL.OpenWorldSAM2.DIAG.SMALL_GRAD_THR = 1e-8
+    cfg.MODEL.OpenWorldSAM2.DIAG.WARN_STREAK = 3
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_BG_MARGIN = 0.05
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.WEAK_MAP_EXPORT_PATH = "outputs/weak_map_supervision_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.FUSION.ANALYSIS_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.ANALYSIS_EXPORT_PATH = "outputs/route_map_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.FUSION.CAND_DIVERSITY_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.CAND_DIVERSITY_WEIGHT = 0.05
+    cfg.MODEL.OpenWorldSAM2.FUSION.CAND_DIVERSITY_MARGIN = 0.60
+    cfg.MODEL.OpenWorldSAM2.FUSION.CAND_DIVERSITY_TOPM = 4
+    cfg.MODEL.OpenWorldSAM2.FUSION.CAND_DIVERSITY_USE_TOPM_BY_IOUPRED = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.LOG_CAND_DIVERSITY_STATS = True
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXTRA_ANALYSIS_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXTRA_ANALYSIS_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.EXTRA_ANALYSIS_EXPORT_PATH = "outputs/candidate_extra_analysis.jsonl"
+    cfg.MODEL.OpenWorldSAM2.FUSION.SAME_IMAGE_HARD_SUBSET_ON = False
+    cfg.MODEL.OpenWorldSAM2.FUSION.SAME_IMAGE_HARD_GAP_THR = 0.05
+
+    # OPENWORLDSAM2 inference config
+    cfg.MODEL.OpenWorldSAM2.TEST = CN()
+    cfg.MODEL.OpenWorldSAM2.TEST.SEMANTIC_ON = False
+    cfg.MODEL.OpenWorldSAM2.TEST.INSTANCE_ON = True
+    cfg.MODEL.OpenWorldSAM2.TEST.PANOPTIC_ON = False
+    cfg.MODEL.OpenWorldSAM2.TEST.TOP_K_ON = False
+    cfg.MODEL.OpenWorldSAM2.TEST.NMS_ON = True
+    cfg.MODEL.OpenWorldSAM2.TEST.NMS_THRESHOLD = 0.0
+    cfg.MODEL.OpenWorldSAM2.TEST.IOU_THRESHOLD = 0.0
+    cfg.MODEL.OpenWorldSAM2.TEST.DETECTIONS_PER_IMAGE = 30
+    cfg.MODEL.OpenWorldSAM2.TEST.TWO_STAGE_INFERENCE = False
+    cfg.MODEL.OpenWorldSAM2.TEST.REFER_ON = False
+
+    # loss
+    cfg.MODEL.OpenWorldSAM2.DICE_WEIGHT = 1.0
+    cfg.MODEL.OpenWorldSAM2.MASK_WEIGHT = 5.0
+    # no object and objectness weight are set to 0 to disable them
+    # no supervision on SAM's IOU prediction because empirical results show it does not help
+    cfg.MODEL.OpenWorldSAM2.NO_OBJECT_WEIGHT = 0.0
+    cfg.MODEL.OpenWorldSAM2.OBJECTNESS_WEIGHT = 0.0
+
+    # ── Sparse Text Adapter Stack on image_embed ────────────────────────────
+    cfg.MODEL.OpenWorldSAM2.STA_ON = False
+    cfg.MODEL.OpenWorldSAM2.STA_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.STA_STACK_DEPTH = 2     # current v3 = two serial adapters on image_embed
+    cfg.MODEL.OpenWorldSAM2.STA_INJECT_BLOCKS = [12, 16, 20]
+    cfg.MODEL.OpenWorldSAM2.STA_HIERARCHICAL_ON = True
+    cfg.MODEL.OpenWorldSAM2.STA_EARLY_BLOCK_MAX = 12
+    cfg.MODEL.OpenWorldSAM2.STA_EARLY_TEXT_MODE = "token"
+    cfg.MODEL.OpenWorldSAM2.STA_LATE_TEXT_MODE = "sentence"
+    cfg.MODEL.OpenWorldSAM2.STA_SENTENCE_POOL = "mean_first_mix"
+    cfg.MODEL.OpenWorldSAM2.STA_SENTENCE_MIX = 0.5
+    cfg.MODEL.OpenWorldSAM2.STA_VIS_DIM = 576       # SAM2 image_embed channel dim = query_dim
+    cfg.MODEL.OpenWorldSAM2.STA_TEXT_DIM = 1024     # BEiT-3 hidden dim (evf_sam2.config.hidden_size)
+    cfg.MODEL.OpenWorldSAM2.STA_GATE_INIT = 0.0
+    cfg.MODEL.OpenWorldSAM2.STA_VARIANT = "bigs"
+    cfg.MODEL.OpenWorldSAM2.STA_NUM_TEXT_VIEWS = 3
+    cfg.MODEL.OpenWorldSAM2.STA_USE_COMPETITIVE_ROUTING = True
+    cfg.MODEL.OpenWorldSAM2.STA_USE_FILM = True
+    cfg.MODEL.OpenWorldSAM2.STA_USE_COMPLEXITY_GATE = True
+    cfg.MODEL.OpenWorldSAM2.STA_MAX_RESIDUAL_RATIO = 0.10
+    cfg.MODEL.OpenWorldSAM2.STA_MAX_MOD_SCALE = 1.0
+    cfg.MODEL.OpenWorldSAM2.STA_MIN_BLOCK_GATE = 0.05
+    cfg.MODEL.OpenWorldSAM2.STA_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.STA_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.STA_EXPORT_PATH = "outputs/sta_analysis.jsonl"
+
+    # ── Disambiguation Plugin (Stage 0/1 actually used) ────────────────────
+    cfg.MODEL.OpenWorldSAM2.DP_ON = False
+    cfg.MODEL.OpenWorldSAM2.DP_TRAIN_ON = False
+    cfg.MODEL.OpenWorldSAM2.DP_HIDDEN = 128
+    cfg.MODEL.OpenWorldSAM2.DP_VIS_DIM = 256
+    cfg.MODEL.OpenWorldSAM2.DP_TEXT_DIM = 1024
+    cfg.MODEL.OpenWorldSAM2.DP_DEBUG = False
+    cfg.MODEL.OpenWorldSAM2.DP_EXPORT_ON = False
+    cfg.MODEL.OpenWorldSAM2.DP_EXPORT_PATH = "outputs/dp_analysis.jsonl"
+
+    # ── Disambiguation Plugin (reserved for Stage 2 ranking loss; NOT used now) ──
+    cfg.MODEL.OpenWorldSAM2.DP_AMBIG_THR = 0.6
+    cfg.MODEL.OpenWorldSAM2.DP_HARD_LOSS_W = 2.0
+    cfg.MODEL.OpenWorldSAM2.DP_AMBIG_GAP_THR = 0.05
+
+    # ── Instance Contrastive Loss ─────────────────────────────────────────────
+    cfg.MODEL.OpenWorldSAM2.IC_ON = False
+    cfg.MODEL.OpenWorldSAM2.IC_WEIGHT = 0.1
+    cfg.MODEL.OpenWorldSAM2.IC_MARGIN = 0.3
+    cfg.MODEL.OpenWorldSAM2.IC_TEMP = 0.07        # InfoNCE temperature
+    cfg.MODEL.OpenWorldSAM2.IC_LOSS_TYPE = "margin"  # "margin" or "infonce"
+    cfg.MODEL.OpenWorldSAM2.IC_DEBUG = False
